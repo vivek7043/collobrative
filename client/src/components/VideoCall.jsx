@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
+import { useNavigate } from 'react-router-dom';
+import { useNotification } from '../hooks/useNotification';
 
 const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) => {
     const [peers, setPeers] = useState([]);
@@ -10,6 +12,8 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
     const userVideo = useRef();
     const peersRef = useRef([]);
     const streamRef = useRef();
+    const navigate = useNavigate();
+    const notify = useNotification();
 
     useEffect(() => {
         if (!socket) return;
@@ -183,6 +187,12 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
         }
     };
 
+    const leaveCall = () => {
+        notify('Exiting room and ending session...', 'info');
+        if (socket) socket.disconnect();
+        navigate('/');
+    };
+
     // Re-apply local stream whenever the sharing state changes (since elements might remount)
     useEffect(() => {
         if (streamRef.current && userVideo.current) {
@@ -192,25 +202,19 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
 
     // Calculate grid layout based on number of participants
     const totalUsers = peers.length + 1;
-    // Simple dynamic grid logic or flex wrap
+
+    const getGridLayout = () => {
+        if (totalUsers === 1) return '1fr';
+        if (totalUsers === 2) return '1fr 1fr';
+        if (totalUsers <= 4) return '1fr 1fr';
+        if (totalUsers <= 6) return 'repeat(3, 1fr)';
+        return 'repeat(auto-fit, minmax(300px, 1fr))';
+    };
 
     return (
-        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', padding: '20px' }}>
             {/* Controls Bar */}
-            <div style={{
-                padding: '15px 25px',
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '20px',
-                background: 'rgba(15, 23, 42, 0.8)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '24px',
-                marginBottom: '20px',
-                border: '1px solid var(--border-color)',
-                width: 'fit-content',
-                alignSelf: 'center',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
-            }}>
+            <div className="video-controls-bar">
                 <button
                     onClick={toggleAudio}
                     className="video-control-btn"
@@ -222,8 +226,8 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                         color: 'white',
                         cursor: 'pointer',
                         fontSize: '1.2rem',
-                        width: '56px',
-                        height: '56px',
+                        width: '50px',
+                        height: '50px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -244,8 +248,8 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                         color: 'white',
                         cursor: 'pointer',
                         fontSize: '1.2rem',
-                        width: '56px',
-                        height: '56px',
+                        width: '50px',
+                        height: '50px',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -255,42 +259,56 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                 >
                     <i className={`fas ${videoOff ? 'fa-video-slash' : 'fa-video'}`}></i>
                 </button>
-                <div style={{ width: '2px', background: 'rgba(255,255,255,0.1)', margin: '0 10px' }} />
                 <button
                     onClick={isScreenSharing ? stopScreenShare : startScreenShare}
-                    className="video-control-btn"
+                    className="video-control-btn screen-share-btn"
                     style={{
-                        padding: '12px 24px',
+                        padding: '12px',
                         borderRadius: '16px',
                         border: 'none',
                         background: isScreenSharing ? '#ef4444' : 'linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%)',
                         color: 'white',
                         cursor: 'pointer',
-                        fontSize: '0.95rem',
-                        fontWeight: '700',
-                        transition: 'all 0.3s',
+                        fontSize: '1.2rem',
+                        width: '50px',
+                        height: '50px',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '10px'
+                        justifyContent: 'center',
+                        transition: 'all 0.3s'
                     }}
                 >
                     <i className={`fas ${isScreenSharing ? 'fa-stop-circle' : 'fa-desktop'}`}></i>
-                    {isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
+                </button>
+                <button
+                    onClick={leaveCall}
+                    className="video-control-btn"
+                    style={{
+                        padding: '12px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        background: '#ef4444',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '1.2rem',
+                        width: '50px',
+                        height: '50px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s'
+                    }}
+                    title="End Session"
+                >
+                    <i className="fas fa-phone-slash"></i>
                 </button>
             </div>
 
             {/* Video Layout */}
-            <div style={{
-                flex: 1,
-                display: 'flex',
-                gap: '20px',
-                padding: '10px',
-                flexDirection: sharingUserId ? 'column' : 'row',
-                overflow: 'hidden'
-            }}>
+            <div className="video-layout-container">
                 {/* Hero View (Main Screen Share) */}
                 {sharingUserId && (
-                    <div style={{ flex: 1, position: 'relative', borderRadius: '24px', overflow: 'hidden', backgroundColor: '#000', border: '2px solid var(--primary-color)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+                    <div style={{ flex: 1, minHeight: '500px', position: 'relative', borderRadius: '32px', overflow: 'hidden', backgroundColor: '#020617', border: '2px solid var(--primary-color)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
                         {sharingUserId === socket.id ? (
                             <video muted ref={userVideo} autoPlay playsInline style={{ width: "100%", height: '100%', objectFit: 'contain' }} />
                         ) : (
@@ -307,25 +325,20 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
 
                 {/* Participant Strip/Grid - Hidden during screen share */}
                 {!sharingUserId && (
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: totalUsers === 1 ? '1fr' : totalUsers <= 2 ? '1fr 1fr' : 'repeat(auto-fit, minmax(400px, 1fr))',
-                        gap: '20px',
-                        width: '100%',
-                        height: '100%',
-                        alignContent: 'center'
+                    <div className="video-participant-grid" style={{
+                        gridTemplateColumns: getGridLayout()
                     }}>
                         {/* Me */}
-                        <div className="video-tile" style={{ position: 'relative', width: '100%', minHeight: '350px', backgroundColor: '#0f172a', borderRadius: '24px', overflow: 'hidden', border: '2px solid var(--border-color)' }}>
+                        <div className="video-tile me-tile">
                             <video muted ref={userVideo} autoPlay playsInline style={{ width: "100%", height: '100%', objectFit: 'cover' }} />
-                            <div style={{ position: 'absolute', bottom: '15px', left: '15px', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(8px)', padding: '6px 12px', borderRadius: '10px', color: 'white', fontSize: '0.8rem', fontWeight: '600' }}>{userName}</div>
+                            <div className="participant-label">{userName} (You)</div>
                         </div>
 
                         {/* Peers */}
                         {peers.map(peer => (
-                            <div key={peer.peerID} className="video-tile" style={{ position: 'relative', width: '100%', minHeight: '350px', backgroundColor: '#0f172a', borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                            <div key={peer.peerID} className="video-tile">
                                 <Video peer={peer.peer} />
-                                <div style={{ position: 'absolute', bottom: '15px', left: '15px', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(8px)', padding: '6px 12px', borderRadius: '10px', color: 'white', fontSize: '0.8rem', fontWeight: '600' }}>{participants[peer.peerID] || 'Anonymous'}</div>
+                                <div className="participant-label">{participants[peer.peerID] || 'Anonymous'}</div>
                             </div>
                         ))}
                     </div>
@@ -333,15 +346,89 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
             </div>
 
             <style>{`
-                .video-control-btn:hover {
-                    transform: translateY(-2px);
-                    filter: brightness(1.2);
+                .video-controls-bar {
+                    padding: 15px 25px;
+                    display: flex;
+                    justify-content: center;
+                    gap: 15px;
+                    background: rgba(15, 23, 42, 0.8);
+                    backdrop-filter: blur(10px);
+                    borderRadius: 24px;
+                    marginBottom: 20px;
+                    border: 1px solid var(--border-color);
+                    width: fit-content;
+                    alignSelf: center;
+                    boxShadow: 0 10px 30px rgba(0,0,0,0.3);
+                    z-index: 100;
+                }
+                .video-layout-container {
+                    flex: 1;
+                    display: flex;
+                    gap: 20px;
+                    flex-direction: ${sharingUserId ? 'column' : 'row'};
+                    overflow-y: auto;
+                    padding: 10px;
+                }
+                .video-participant-grid {
+                    display: grid;
+                    gap: 15px;
+                    width: 100%;
+                    max-width: 1600px;
+                    margin: 0 auto;
+                    align-items: start;
+                    align-content: start;
                 }
                 .video-tile {
+                    position: relative;
+                    width: 100%;
+                    aspect-ratio: 16 / 9;
+                    background-color: #0f172a;
+                    border-radius: 20px;
+                    overflow: hidden;
+                    border: 1px solid var(--border-color);
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
                     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                .me-tile {
+                    border: 2px solid var(--primary-color);
+                }
+                .participant-label {
+                    position: absolute;
+                    bottom: 15px;
+                    left: 15px;
+                    background: rgba(15, 23, 42, 0.7);
+                    backdrop-filter: blur(8px);
+                    padding: 6px 12px;
+                    border-radius: 10px;
+                    color: white;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    z-index: 5;
                 }
                 .video-tile:hover {
                     border-color: var(--primary-color) !important;
+                    transform: scale(1.02);
+                }
+                @media (max-width: 768px) {
+                    .video-controls-bar {
+                        padding: 10px 15px;
+                        gap: 10px;
+                        border-radius: 16px;
+                    }
+                    .video-control-btn {
+                        width: 44px !important;
+                        height: 44px !important;
+                        font-size: 1rem !important;
+                    }
+                    .video-participant-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 10px;
+                    }
+                    .participant-label {
+                        bottom: 10px;
+                        left: 10px;
+                        font-size: 0.7rem;
+                    }
                 }
             `}</style>
         </div>

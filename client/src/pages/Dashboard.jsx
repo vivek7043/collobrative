@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { useNotification } from '../context/NotificationContext';
+import { useNotification } from '../hooks/useNotification';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -53,7 +53,7 @@ const Dashboard = () => {
                     {mode === 'home' && (
                         <div className="home-actions animate-in">
                             <div className="quote-section">
-                                <p style={{ margin: 0, color: '#d4af37', fontSize: '0.9rem', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '2px' }}>Insight</p>
+                                <p style={{ margin: 0, color: '#06b6d4', fontSize: '0.9rem', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '2px' }}>Insight</p>
                                 "{currentQuote}"
                             </div>
                             <button className="btn-primary main-btn" onClick={() => setMode('create')}>

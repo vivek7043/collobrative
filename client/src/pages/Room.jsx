@@ -5,7 +5,7 @@ import Editor from '../components/Editor';
 import Whiteboard from '../components/Whiteboard';
 import VideoCall from '../components/VideoCall';
 import { useLocation } from 'react-router-dom';
-import { useNotification } from '../context/NotificationContext';
+import { useNotification } from '../hooks/useNotification';
 
 const Room = () => {
     const { id: roomId } = useParams();
@@ -113,7 +113,7 @@ const Room = () => {
     });
 
     return (
-        <div className="room-container" style={{ display: 'flex', height: '100vh', overflow: 'hidden', position: 'relative' }}>
+        <div className="room-page-wrapper">
 
             {/* Username Prompt Overlay */}
             {showNamePrompt && (
@@ -122,8 +122,8 @@ const Room = () => {
                     background: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(10px)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                    <div className="card" style={{ width: '450px', padding: '50px', textAlign: 'center' }}>
-                        <h1 className="serif" style={{ fontSize: '2.5rem', marginBottom: '10px' }}>GLS UNIVERSITY</h1>
+                    <div className="card" style={{ maxWidth: '450px', width: '90%', padding: '50px', textAlign: 'center' }}>
+                        <h1 className="serif" style={{ fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', marginBottom: '10px' }}>GLS UNIVERSITY</h1>
                         <p style={{ color: '#94a3b8', marginBottom: '30px', fontSize: '1rem', letterSpacing: '1px' }}>Elevate your intellectual collaboration.</p>
                         <input
                             type="text"
@@ -145,15 +145,9 @@ const Room = () => {
                 </div>
             )}
 
-            <div className="room-container" style={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden' }}>
+            <div className="room-content">
                 {/* Sidebar (Editor / Whiteboard - Optimized for Height) */}
-                <div className="left-panel" style={{
-                    width: '480px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'hidden',
-                    borderRight: '1px solid var(--border-color)'
-                }}>
+                <div className="left-panel">
 
                     {/* Tools Header - Compact */}
                     <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-color)' }}>
@@ -224,7 +218,7 @@ const Room = () => {
                 </div>
 
                 {/* Main Panel (Video / Screen Share - Big) */}
-                <div className="main-panel" style={{ flex: 1, position: 'relative', overflow: 'hidden', backgroundColor: '#020617', padding: '20px' }}>
+                <div className="main-panel">
                     {joined && socket && (
                         <VideoCall socket={socket} roomId={roomId} userName={userName} participants={participants} setParticipants={setParticipants} />
                     )}

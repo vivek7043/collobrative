@@ -1,6 +1,6 @@
-import React, { createContext, useState, useContext, useCallback } from 'react';
+import React, { createContext, useState, useCallback } from 'react';
 
-const NotificationContext = createContext();
+export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
     const [notification, setNotification] = useState(null);
@@ -19,14 +19,6 @@ export const NotificationProvider = ({ children }) => {
             {notification && <Toast message={notification.message} type={notification.type} onClose={() => setNotification(null)} />}
         </NotificationContext.Provider>
     );
-};
-
-export const useNotification = () => {
-    const context = useContext(NotificationContext);
-    if (!context) {
-        throw new Error('useNotification must be used within a NotificationProvider');
-    }
-    return context.showNotification;
 };
 
 const Toast = ({ message, type, onClose }) => {
@@ -64,12 +56,11 @@ const Toast = ({ message, type, onClose }) => {
                 padding: '18px 30px',
                 borderRadius: '20px',
                 border: `1px solid var(--primary-color)`,
-                boxShadow: `0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(212, 175, 55, 0.1)`,
+                boxShadow: `0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(6, 182, 212, 0.1)`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '20px',
-                minWidth: '400px',
-                maxWidth: '600px',
+                width: 'min(90%, 500px)',
                 color: 'white',
                 cursor: 'pointer'
             }}

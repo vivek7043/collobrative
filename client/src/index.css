@@ -9,14 +9,15 @@
     color: #e2e8f0;
     background-color: #020617;
 
-    --primary-color: #d4af37;
-    /* Luxury Gold */
-    --primary-glow: rgba(212, 175, 55, 0.3);
+    --primary-color: #06b6d4;
+    /* Electric Cyan */
+    --primary-glow: rgba(6, 182, 212, 0.3);
     --bg-surface: #020617;
     --bg-card: rgba(15, 23, 42, 0.7);
-    --border-color: rgba(212, 175, 55, 0.15);
-    --accent-color: #f8fafc;
-    --gold-gradient: linear-gradient(135deg, #d4af37 0%, #f1d592 50%, #d4af37 100%);
+    --border-color: rgba(6, 182, 212, 0.15);
+    --accent-color: #6366f1;
+    /* Indigo */
+    --vibrant-gradient: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
     --navy-gradient: radial-gradient(circle at top right, #1e293b, #020617);
 }
 
@@ -46,12 +47,12 @@ h3,
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(212, 175, 55, 0.2);
+    background: rgba(6, 182, 212, 0.2);
     border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(212, 175, 55, 0.4);
+    background: rgba(6, 182, 212, 0.4);
 }
 
 #root {
@@ -67,15 +68,15 @@ h3,
     padding: 2rem;
     box-sizing: border-box;
     background-image:
-        radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.05) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(212, 175, 55, 0.05) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
 }
 
 .card {
     background: var(--bg-card);
     padding: 3.5rem;
     border-radius: 32px;
-    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), 0 0 40px rgba(212, 175, 55, 0.05);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), 0 0 40px rgba(6, 182, 212, 0.05);
     text-align: center;
     max-width: 500px;
     width: 100%;
@@ -92,7 +93,7 @@ h3,
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--gold-gradient);
+    background: var(--vibrant-gradient);
     opacity: 0.5;
 }
 
@@ -101,11 +102,11 @@ h1 {
     font-weight: 700;
     margin-bottom: 0.5rem;
     letter-spacing: -0.01em;
-    background: var(--gold-gradient);
+    background: var(--vibrant-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 10px 30px rgba(212, 175, 55, 0.2);
+    text-shadow: 0 10px 30px rgba(6, 182, 212, 0.2);
 }
 
 p.tagline {
@@ -121,7 +122,7 @@ p.tagline {
     margin: 2rem 0;
     padding: 1.5rem;
     border-left: 2px solid var(--primary-color);
-    background: rgba(212, 175, 55, 0.03);
+    background: rgba(6, 182, 212, 0.03);
     border-radius: 0 16px 16px 0;
     font-style: italic;
     color: #e2e8f0;
@@ -143,25 +144,25 @@ p.tagline {
 }
 
 .btn-primary {
-    background: var(--gold-gradient);
-    color: #020617;
-    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+    background: var(--vibrant-gradient);
+    color: white;
+    box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
 }
 
 .btn-primary:hover {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 15px 35px rgba(212, 175, 55, 0.4);
+    box-shadow: 0 15px 35px rgba(6, 182, 212, 0.4);
     filter: brightness(1.1);
 }
 
 .btn-secondary {
     background-color: rgba(255, 255, 255, 0.03);
     color: #f8fafc;
-    border: 1px solid rgba(212, 175, 55, 0.2);
+    border: 1px solid rgba(6, 182, 212, 0.2);
 }
 
 .btn-secondary:hover {
-    background-color: rgba(212, 175, 55, 0.1);
+    background-color: rgba(6, 182, 212, 0.1);
     border-color: var(--primary-color);
     transform: translateY(-3px);
 }
@@ -219,9 +220,9 @@ p.tagline {
 }
 
 .copy-btn {
-    background: rgba(212, 175, 55, 0.1);
+    background: rgba(6, 182, 212, 0.1);
     color: var(--primary-color);
-    border: 1px solid rgba(212, 175, 55, 0.2);
+    border: 1px solid rgba(6, 182, 212, 0.2);
     padding: 10px 20px;
     border-radius: 10px;
     cursor: pointer;
@@ -305,4 +306,134 @@ p.tagline {
 .toast-container:hover {
     transform: translate(-50%, 2px) scale(1.02);
     filter: brightness(1.1);
+}
+
+/* Room Layout */
+.room-page-wrapper {
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+.room-content {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+.left-panel {
+    width: 480px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--border-color);
+    background: rgba(2, 6, 23, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+.main-panel {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background-color: #020617;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .room-content {
+        flex-direction: column-reverse;
+        overflow-y: auto;
+    }
+
+    .left-panel {
+        width: 100%;
+        height: auto;
+        min-height: 500px;
+        flex: none;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .main-panel {
+        width: 100%;
+        height: auto;
+        min-height: 400px;
+        flex: none;
+    }
+
+    /* Rest of mobile styles... */
+    .dashboard-container {
+        padding: 1rem;
+    }
+
+    .card {
+        padding: 2rem 1.5rem;
+        border-radius: 24px;
+        max-width: 100%;
+    }
+
+    h1 {
+        font-size: 2.2rem;
+    }
+
+    p.tagline {
+        font-size: 1rem;
+        letter-spacing: 0.05em;
+        margin-bottom: 2rem;
+    }
+
+    .steps {
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-top: 3rem;
+        width: 100%;
+    }
+
+    .step-card {
+        padding: 1.5rem;
+        border-radius: 20px;
+    }
+
+    .step-icon {
+        font-size: 2.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .step-card h3 {
+        font-size: 1.2rem;
+    }
+
+    .main-btn {
+        font-size: 1.1rem;
+        padding: 1.2rem !important;
+    }
+
+    .input-field {
+        padding: 1rem;
+        font-size: 1rem;
+    }
+
+    .id-container {
+        flex-direction: column;
+        gap: 12px;
+        padding: 1rem;
+    }
+
+    .generated-id {
+        font-size: 1rem;
+    }
+
+    .copy-btn {
+        width: 100%;
+    }
+
+    .toast-container {
+        min-width: 90%;
+        padding: 12px 20px;
+        gap: 10px;
+    }
 }
