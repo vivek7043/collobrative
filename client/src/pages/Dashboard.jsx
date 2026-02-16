@@ -12,7 +12,7 @@ const Dashboard = () => {
     const notify = useNotification();
 
     const quotes = useMemo(() => [
-        "Intelligence is the ability to adapt to change. — Stephen Hawking",
+        "Intelligence is the ability to adapt to change. — Utsav Bhut",
         "The mind is not a vessel to be filled, but a fire to be kindled. — Plutarch",
         "Excellence is not an act, but a habit. — Aristotle",
         "The best way to predict your future is to create it. — Peter Drucker",
