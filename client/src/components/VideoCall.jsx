@@ -6,6 +6,7 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
     const [muted, setMuted] = useState(false);
     const [videoOff, setVideoOff] = useState(false);
     const [isScreenSharing, setIsScreenSharing] = useState(false);
+    const [sharingUserId, setSharingUserId] = useState(null);
     const userVideo = useRef();
     const peersRef = useRef([]);
     const streamRef = useRef();
@@ -52,13 +53,12 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                 });
 
                 socket.on("user-started-sharing", userId => {
-                    // No need to hoist via props anymore.
-                    // The peer stream will naturally remain tied to the Video element.
-                    // The layout just needs to be big enough to show it.
+                    setSharingUserId(userId);
                     console.log(`[VideoCall] User ${userId} started sharing screen`);
                 });
 
                 socket.on("user-stopped-sharing", userId => {
+                    setSharingUserId(null);
                     console.log(`[VideoCall] User ${userId} stopped sharing`);
                 });
 
@@ -146,6 +146,7 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                 if (userVideo.current) userVideo.current.srcObject = screenStream;
 
                 setIsScreenSharing(true);
+                setSharingUserId(socket.id);
                 socket.emit('start-sharing', { roomId });
 
                 screenTrack.onended = () => {
@@ -174,12 +175,20 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                 if (userVideo.current) userVideo.current.srcObject = newStream;
 
                 setIsScreenSharing(false);
+                setSharingUserId(null);
                 socket.emit('stop-sharing', { roomId });
             }
         } catch (err) {
             console.error("Failed to stop screen share:", err);
         }
     };
+
+    // Re-apply local stream whenever the sharing state changes (since elements might remount)
+    useEffect(() => {
+        if (streamRef.current && userVideo.current) {
+            userVideo.current.srcObject = streamRef.current;
+        }
+    }, [sharingUserId, isScreenSharing]);
 
     // Calculate grid layout based on number of participants
     const totalUsers = peers.length + 1;
@@ -212,7 +221,7 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                         background: muted ? '#ef4444' : 'rgba(255,255,255,0.1)',
                         color: 'white',
                         cursor: 'pointer',
-                        fontSize: '1.4rem',
+                        fontSize: '1.2rem',
                         width: '56px',
                         height: '56px',
                         display: 'flex',
@@ -220,8 +229,9 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                         justifyContent: 'center',
                         transition: 'all 0.3s'
                     }}
+                    title={muted ? "Unmute" : "Mute"}
                 >
-                    {muted ? '🔇' : '🎤'}
+                    <i className={`fas ${muted ? 'fa-microphone-slash' : 'fa-microphone'}`}></i>
                 </button>
                 <button
                     onClick={toggleVideo}
@@ -233,7 +243,7 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                         background: videoOff ? '#ef4444' : 'rgba(255,255,255,0.1)',
                         color: 'white',
                         cursor: 'pointer',
-                        fontSize: '1.4rem',
+                        fontSize: '1.2rem',
                         width: '56px',
                         height: '56px',
                         display: 'flex',
@@ -241,8 +251,9 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                         justifyContent: 'center',
                         transition: 'all 0.3s'
                     }}
+                    title={videoOff ? "Turn Camera On" : "Turn Camera Off"}
                 >
-                    {videoOff ? '📷' : '🚫'}
+                    <i className={`fas ${videoOff ? 'fa-video-slash' : 'fa-video'}`}></i>
                 </button>
                 <div style={{ width: '2px', background: 'rgba(255,255,255,0.1)', margin: '0 10px' }} />
                 <button
@@ -255,7 +266,7 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                         background: isScreenSharing ? '#ef4444' : 'linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%)',
                         color: 'white',
                         cursor: 'pointer',
-                        fontSize: '1rem',
+                        fontSize: '0.95rem',
                         fontWeight: '700',
                         transition: 'all 0.3s',
                         display: 'flex',
@@ -263,32 +274,62 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                         gap: '10px'
                     }}
                 >
-                    {isScreenSharing ? '⏹️ Stop Share' : '🖥️ Share Screen'}
+                    <i className={`fas ${isScreenSharing ? 'fa-stop-circle' : 'fa-desktop'}`}></i>
+                    {isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
                 </button>
             </div>
 
-            {/* Video Grid */}
+            {/* Video Layout */}
             <div style={{
                 flex: 1,
-                display: 'grid',
-                gridTemplateColumns: totalUsers === 1 ? '1fr' : totalUsers <= 2 ? '1fr 1fr' : 'repeat(auto-fit, minmax(400px, 1fr))',
+                display: 'flex',
                 gap: '20px',
                 padding: '10px',
-                alignContent: 'center'
+                flexDirection: sharingUserId ? 'column' : 'row',
+                overflow: 'hidden'
             }}>
-                {/* Me */}
-                <div className="video-tile" style={{ position: 'relative', width: '100%', minHeight: '350px', backgroundColor: '#0f172a', borderRadius: '24px', overflow: 'hidden', border: '2px solid var(--border-color)', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-                    <video muted ref={userVideo} autoPlay playsInline style={{ width: "100%", height: '100%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', bottom: '15px', left: '15px', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(8px)', padding: '6px 12px', borderRadius: '10px', color: 'white', fontSize: '0.9rem', fontWeight: '600', border: '1px solid rgba(255,255,255,0.1)' }}>{userName} (You)</div>
-                </div>
-
-                {/* Peers */}
-                {peers.map(peer => (
-                    <div key={peer.peerID} className="video-tile" style={{ position: 'relative', width: '100%', minHeight: '350px', backgroundColor: '#0f172a', borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--border-color)', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-                        <Video peer={peer.peer} />
-                        <div style={{ position: 'absolute', bottom: '15px', left: '15px', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(8px)', padding: '6px 12px', borderRadius: '10px', color: 'white', fontSize: '0.9rem', fontWeight: '600', border: '1px solid rgba(255,255,255,0.1)' }}>{participants[peer.peerID] || 'Anonymous'}</div>
+                {/* Hero View (Main Screen Share) */}
+                {sharingUserId && (
+                    <div style={{ flex: 1, position: 'relative', borderRadius: '24px', overflow: 'hidden', backgroundColor: '#000', border: '2px solid var(--primary-color)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+                        {sharingUserId === socket.id ? (
+                            <video muted ref={userVideo} autoPlay playsInline style={{ width: "100%", height: '100%', objectFit: 'contain' }} />
+                        ) : (
+                            peers.find(p => p.peerID === sharingUserId) && (
+                                <Video peer={peers.find(p => p.peerID === sharingUserId).peer} isShare={true} />
+                            )
+                        )}
+                        <div style={{ position: 'absolute', bottom: '20px', left: '20px', background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(10px)', padding: '8px 16px', borderRadius: '12px', color: 'white', fontWeight: '700', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <i className="fas fa-desktop" style={{ color: 'var(--primary-color)' }}></i>
+                            {sharingUserId === socket.id ? 'You are sharing' : `${participants[sharingUserId] || 'Someone'} is sharing`}
+                        </div>
                     </div>
-                ))}
+                )}
+
+                {/* Participant Strip/Grid - Hidden during screen share */}
+                {!sharingUserId && (
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: totalUsers === 1 ? '1fr' : totalUsers <= 2 ? '1fr 1fr' : 'repeat(auto-fit, minmax(400px, 1fr))',
+                        gap: '20px',
+                        width: '100%',
+                        height: '100%',
+                        alignContent: 'center'
+                    }}>
+                        {/* Me */}
+                        <div className="video-tile" style={{ position: 'relative', width: '100%', minHeight: '350px', backgroundColor: '#0f172a', borderRadius: '24px', overflow: 'hidden', border: '2px solid var(--border-color)' }}>
+                            <video muted ref={userVideo} autoPlay playsInline style={{ width: "100%", height: '100%', objectFit: 'cover' }} />
+                            <div style={{ position: 'absolute', bottom: '15px', left: '15px', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(8px)', padding: '6px 12px', borderRadius: '10px', color: 'white', fontSize: '0.8rem', fontWeight: '600' }}>{userName}</div>
+                        </div>
+
+                        {/* Peers */}
+                        {peers.map(peer => (
+                            <div key={peer.peerID} className="video-tile" style={{ position: 'relative', width: '100%', minHeight: '350px', backgroundColor: '#0f172a', borderRadius: '24px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                                <Video peer={peer.peer} />
+                                <div style={{ position: 'absolute', bottom: '15px', left: '15px', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(8px)', padding: '6px 12px', borderRadius: '10px', color: 'white', fontSize: '0.8rem', fontWeight: '600' }}>{participants[peer.peerID] || 'Anonymous'}</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <style>{`
@@ -307,15 +348,27 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
     );
 };
 
-const Video = ({ peer }) => {
+const Video = ({ peer, isShare = false }) => {
     const ref = useRef();
     useEffect(() => {
-        peer.on("stream", stream => {
-            console.log("[VideoCall] Remote stream attached to element");
+        const handleStream = stream => {
             if (ref.current) ref.current.srcObject = stream;
-        });
+        };
+
+        // If peer already has a stream, assign it immediately
+        if (peer._remoteStreams && peer._remoteStreams[0] && ref.current) {
+            ref.current.srcObject = peer._remoteStreams[0];
+        } else if (peer.streams && peer.streams[0] && ref.current) {
+            ref.current.srcObject = peer.streams[0];
+        }
+
+        peer.on("stream", handleStream);
+        return () => {
+            peer.off("stream", handleStream);
+        };
     }, [peer]);
-    return <video playsInline autoPlay ref={ref} style={{ width: "100%", height: '100%', objectFit: 'cover' }} />;
+
+    return <video playsInline autoPlay ref={ref} style={{ width: "100%", height: '100%', objectFit: isShare ? 'contain' : 'cover' }} />;
 };
 
 export default VideoCall;

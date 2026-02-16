@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
+import { useNotification } from '../context/NotificationContext';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -8,12 +9,23 @@ const Dashboard = () => {
     const [joinId, setJoinId] = useState('');
     const [userName, setUserName] = useState('');
     const [generatedId] = useState(uuidv4());
+    const notify = useNotification();
+
+    const quotes = useMemo(() => [
+        "Intelligence is the ability to adapt to change. — Stephen Hawking",
+        "The mind is not a vessel to be filled, but a fire to be kindled. — Plutarch",
+        "Excellence is not an act, but a habit. — Aristotle",
+        "The best way to predict your future is to create it. — Peter Drucker",
+        "Knowledge is power. Information is liberating. — Utsav Bhut"
+    ], []);
+
+    const currentQuote = useMemo(() => quotes[Math.floor(Math.random() * quotes.length)], [quotes]);
 
     const handleJoin = () => {
         if (joinId.trim() && userName.trim()) {
             navigate(`room/${joinId.trim()}`, { state: { userName: userName.trim() } });
         } else {
-            alert('Please enter both Room ID and Your Name');
+            notify('Please enter both Room ID and Your Name', 'warning');
         }
     };
 
@@ -21,81 +33,85 @@ const Dashboard = () => {
         if (userName.trim()) {
             navigate(`room/${generatedId}`, { state: { userName: userName.trim() } });
         } else {
-            alert('Please enter your name first');
+            notify('Please enter your name first', 'warning');
         }
     };
 
     const copyInviteLink = () => {
         const link = window.location.origin + "/room/" + generatedId;
         navigator.clipboard.writeText(link);
-        alert('Invite link copied to clipboard!');
+        notify('Invite link copied to clipboard!', 'success');
     };
 
     const shareToWhatsApp = () => {
         const link = window.location.origin + "/room/" + generatedId;
-        const text = `Join my collaborative workspace on Antigravity: ${link}`;
+        const text = `Join my exclusive GLS University workspace: ${link}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     };
 
     return (
         <div className="dashboard-container">
-            <div className="card glass-effect animate-in">
+            <div className="card animate-in">
                 <div className="card-header">
-                    <h1>✨ Antigravity</h1>
-                    <p>Real-time collaboration for the future.</p>
+                    <h1 className="serif">GLS UNIVERSITY</h1>
+                    <p className="tagline">Collaborative Intelligence</p>
                 </div>
 
                 <div className="content-area">
                     {mode === 'home' && (
                         <div className="home-actions animate-in">
+                            <div className="quote-section">
+                                <p style={{ margin: 0, color: '#d4af37', fontSize: '0.9rem', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '2px' }}>Insight</p>
+                                "{currentQuote}"
+                            </div>
                             <button className="btn-primary main-btn" onClick={() => setMode('create')}>
-                                <span>🚀</span> Create New Meeting
+                                <i className="fas fa-crown"></i> Create Executive Room
                             </button>
-                            <div className="divider">OR</div>
+                            <div className="divider">DISTINCTION THROUGH COLLABORATION</div>
                             <button className="btn-secondary main-btn" onClick={() => setMode('join')}>
-                                <span>🤝</span> Join with ID
+                                <i className="fas fa-signature"></i> Enter Workspace
                             </button>
                         </div>
                     )}
 
                     {mode === 'create' && (
                         <div className="setup-section animate-in">
-                            <h3>Setup your profile</h3>
+                            <h3 className="serif">Member Entry</h3>
                             <input
                                 type="text"
-                                placeholder="Enter your name..."
+                                placeholder="Your Name"
                                 value={userName}
                                 onChange={(e) => setUserName(e.target.value)}
-                                className="input-field large-input"
+                                className="input-field"
                                 style={{ marginBottom: '20px' }}
                             />
-                            <p style={{ fontSize: '0.9rem' }}>Share this unique Room ID to start collaborating.</p>
+                            <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Secure an invitation link for your associates.</p>
                             <div className="id-container">
                                 <span className="generated-id">{generatedId.slice(0, 18)}...</span>
                                 <button
                                     className="copy-btn"
                                     onClick={() => {
                                         navigator.clipboard.writeText(generatedId);
-                                        alert('ID Copied to Clipboard!');
+                                        notify('ID Copied to Clipboard!', 'success');
                                     }}
                                 >
                                     Copy
                                 </button>
                             </div>
-                            <div className="action-row" style={{ flexDirection: 'column', gap: '8px' }}>
-                                <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                                    <button className="copy-btn flex-1" onClick={copyInviteLink} style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8' }}>
-                                        🔗 Copy Link
+                            <div className="action-row" style={{ flexDirection: 'column', gap: '12px' }}>
+                                <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+                                    <button className="copy-btn flex-1" onClick={copyInviteLink}>
+                                        <i className="fas fa-link"></i> Link
                                     </button>
-                                    <button className="copy-btn flex-1" onClick={shareToWhatsApp} style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                                        💬 WhatsApp
+                                    <button className="copy-btn flex-1" onClick={shareToWhatsApp} style={{ borderColor: 'rgba(34, 197, 94, 0.3)', color: '#4ade80' }}>
+                                        <i className="fab fa-whatsapp"></i> Notify
                                     </button>
                                 </div>
-                                <button className="btn-primary" style={{ width: '100%', marginTop: '5px' }} onClick={handleStartCreatedRoom}>
-                                    Enter Room
+                                <button className="btn-primary" style={{ width: '100%', marginTop: '10px' }} onClick={handleStartCreatedRoom}>
+                                    Initialize Workspace
                                 </button>
                                 <button className="btn-secondary" style={{ width: '100%' }} onClick={() => setMode('home')}>
-                                    ← Back
+                                    Return
                                 </button>
                             </div>
                         </div>
@@ -103,21 +119,21 @@ const Dashboard = () => {
 
                     {mode === 'join' && (
                         <div className="setup-section animate-in">
-                            <h3>Join Meeting</h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <h3 className="serif">Join Suite</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 <input
                                     type="text"
-                                    placeholder="Enter your name..."
+                                    placeholder="Your Name"
                                     value={userName}
                                     onChange={(e) => setUserName(e.target.value)}
-                                    className="input-field large-input"
+                                    className="input-field"
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Paste Room ID here..."
+                                    placeholder="Room ID"
                                     value={joinId}
                                     onChange={(e) => setJoinId(e.target.value)}
-                                    className="input-field large-input"
+                                    className="input-field"
                                 />
                             </div>
                             <div className="action-row">
@@ -125,7 +141,7 @@ const Dashboard = () => {
                                     Connect
                                 </button>
                                 <button className="btn-secondary" onClick={() => setMode('home')}>
-                                    ←
+                                    <i className="fas fa-arrow-left"></i>
                                 </button>
                             </div>
                         </div>
@@ -134,26 +150,26 @@ const Dashboard = () => {
 
                 <style>{`
                     .flex-1 { flex: 1; }
-                    .action-row { display: flex; gap: 10px; margin-top: 20px; }
+                    .action-row { display: flex; gap: 10px; margin-top: 25px; }
                     .card-header h1 { margin-top: 0; }
                 `}</style>
             </div>
 
             <div className="steps animate-in" style={{ animationDelay: '0.2s' }}>
                 <div className="step-card">
-                    <span className="step-icon">🔒</span>
-                    <h3>Secure</h3>
-                    <p>End-to-end encrypted rooms.</p>
+                    <span className="step-icon">⚜️</span>
+                    <h3>Elite Security</h3>
+                    <p>Encrypted, peer-to-peer vaults for your intellectual property.</p>
                 </div>
                 <div className="step-card">
                     <span className="step-icon">⚡</span>
-                    <h3>Fast</h3>
-                    <p>Low latency P2P video call.</p>
+                    <h3>High Performance</h3>
+                    <p>Sub-millisecond latency for real-time strategic alignment.</p>
                 </div>
                 <div className="step-card">
-                    <span className="step-icon">🎨</span>
-                    <h3>Creative</h3>
-                    <p>Rich whiteboard & code editor.</p>
+                    <span className="step-icon">💎</span>
+                    <h3>Curated Tools</h3>
+                    <p>Whiteboards and editors designed for sophisticated learning.</p>
                 </div>
             </div>
         </div>

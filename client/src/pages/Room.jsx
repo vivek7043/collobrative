@@ -5,6 +5,7 @@ import Editor from '../components/Editor';
 import Whiteboard from '../components/Whiteboard';
 import VideoCall from '../components/VideoCall';
 import { useLocation } from 'react-router-dom';
+import { useNotification } from '../context/NotificationContext';
 
 const Room = () => {
     const { id: roomId } = useParams();
@@ -12,6 +13,7 @@ const Room = () => {
     const [socket, setSocket] = useState(null);
     const [userName, setUserName] = useState(location.state?.userName || '');
     const [showNamePrompt, setShowNamePrompt] = useState(!location.state?.userName);
+    const notify = useNotification();
     const [activeView, setActiveView] = useState('editor'); // 'editor', 'whiteboard'
     const [joined, setJoined] = useState(false);
     const [participants, setParticipants] = useState({}); // { socketId: name }
@@ -81,7 +83,7 @@ const Room = () => {
     const copyRoomLink = () => {
         const link = window.location.href;
         navigator.clipboard.writeText(link);
-        alert('Room link copied to clipboard!');
+        notify('Room link copied to clipboard!', 'success');
     };
 
     const handleViewChange = (viewName) => {
@@ -120,13 +122,13 @@ const Room = () => {
                     background: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(10px)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                    <div className="card" style={{ width: '400px', padding: '40px', textAlign: 'center' }}>
-                        <h2 style={{ marginBottom: '10px' }}>Join Workspace</h2>
-                        <p style={{ color: '#94a3b8', marginBottom: '25px', fontSize: '0.95rem' }}>Enter your name to join the meeting.</p>
+                    <div className="card" style={{ width: '450px', padding: '50px', textAlign: 'center' }}>
+                        <h1 className="serif" style={{ fontSize: '2.5rem', marginBottom: '10px' }}>GLS UNIVERSITY</h1>
+                        <p style={{ color: '#94a3b8', marginBottom: '30px', fontSize: '1rem', letterSpacing: '1px' }}>Elevate your intellectual collaboration.</p>
                         <input
                             type="text"
                             placeholder="Your Name"
-                            className="input-field large-input"
+                            className="input-field"
                             value={userName}
                             onChange={(e) => setUserName(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && userName.trim() && setShowNamePrompt(false)}
@@ -134,10 +136,10 @@ const Room = () => {
                         />
                         <button
                             className="btn-primary"
-                            style={{ width: '100%', marginTop: '20px', padding: '15px' }}
+                            style={{ width: '100%', marginTop: '30px', padding: '18px' }}
                             onClick={() => userName.trim() && setShowNamePrompt(false)}
                         >
-                            Join Now
+                            Initialize Session
                         </button>
                     </div>
                 </div>

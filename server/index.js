@@ -89,9 +89,15 @@ io.on('connection', (socket) => {
 
     // Emoji Reactions
     socket.on('send-emoji', ({ roomId, emoji }) => {
-        // Broadcast to everyone ELSE in room (sender can add locally for immediate feedback)
-        // Or broadast to everyone INCLUDING sender if easier. Let's broadcast to others.
         socket.to(roomId).emit('receive-emoji', emoji);
+    });
+
+    socket.on('start-sharing', ({ roomId }) => {
+        socket.to(roomId).emit('user-started-sharing', socket.id);
+    });
+
+    socket.on('stop-sharing', ({ roomId }) => {
+        socket.to(roomId).emit('user-stopped-sharing', socket.id);
     });
 
     socket.on('disconnect', () => {
