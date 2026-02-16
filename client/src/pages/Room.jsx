@@ -162,7 +162,7 @@ const Room = () => {
                     </div>
 
                     {/* Active Tool View - Full Height */}
-                    <div style={{ flex: 1, position: 'relative', overflow: 'hidden', padding: '0' }}>
+                    <div className="tool-viewport" style={{ flex: 1, position: 'relative', overflow: 'hidden', padding: '0' }}>
                         <div style={{ height: '100%', overflow: 'hidden' }}>
                             {socket && (
                                 <>

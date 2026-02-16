@@ -342,8 +342,18 @@ p.tagline {
     flex-direction: column;
 }
 
+.tool-viewport {
+    flex: 1;
+    height: 100%;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+    .tool-viewport {
+        height: 500px;
+        flex: none;
+    }
+
     .room-content {
         flex-direction: column-reverse;
         overflow-y: auto;

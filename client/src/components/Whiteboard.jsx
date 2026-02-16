@@ -15,8 +15,8 @@ const Whiteboard = ({ socketRef, roomId, activeView }) => {
 
         // If hidden initially, use a reasonable default. 
         // handleResize will correct this as soon as activeView === 'whiteboard'.
-        if (clientWidth === 0) clientWidth = 600;
-        if (clientHeight === 0) clientHeight = 800;
+        if (clientWidth === 0) clientWidth = window.innerWidth;
+        if (clientHeight === 0) clientHeight = 500;
 
         const canvas = new fabric.Canvas(canvasRef.current, {
             isDrawingMode: true,

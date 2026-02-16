@@ -134,8 +134,17 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
     };
 
     const startScreenShare = async () => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+            notify('Screen sharing is not supported on this browser or device.', 'error');
+            return;
+        }
+
         try {
-            const screenStream = await navigator.mediaDevices.getDisplayMedia({ cursor: true });
+            // Simplified constraints for better mobile browser compatibility
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: false
+            });
             const screenTrack = screenStream.getVideoTracks()[0];
 
             if (streamRef.current) {
@@ -143,7 +152,14 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                 peersRef.current.forEach(({ peer }) => {
                     peer.replaceTrack(videoTrack, screenTrack, streamRef.current);
                 });
+
+                // Keep the original audio track if it exists
+                const audioTrack = streamRef.current.getAudioTracks()[0];
+
+                // Stop the old video track
                 videoTrack.stop();
+
+                // Update the local stream reference
                 streamRef.current.removeTrack(videoTrack);
                 streamRef.current.addTrack(screenTrack);
 
@@ -156,9 +172,14 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                 screenTrack.onended = () => {
                     stopScreenShare();
                 };
+
+                notify('Screen sharing started!', 'success');
             }
         } catch (err) {
             console.error("Failed to share screen:", err);
+            if (err.name !== 'NotAllowedError') {
+                notify('Failed to start screen share. Please try again.', 'error');
+            }
         }
     };
 
