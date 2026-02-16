@@ -11,15 +11,7 @@ const Dashboard = () => {
     const [generatedId] = useState(uuidv4());
     const notify = useNotification();
 
-    const quotes = useMemo(() => [
-        "Intelligence is the ability to adapt to change. — Utsav Bhut",
-        "The mind is not a vessel to be filled, but a fire to be kindled. — Plutarch",
-        "Excellence is not an act, but a habit. — Aristotle",
-        "The best way to predict your future is to create it. — Peter Drucker",
-        "Knowledge is power. Information is liberating. — Utsav Bhut"
-    ], []);
-
-    const currentQuote = useMemo(() => quotes[Math.floor(Math.random() * quotes.length)], [quotes]);
+    const currentQuote = "Knowledge is power. Information is liberating. — Utsav Bhut";
 
     const handleJoin = () => {
         if (joinId.trim() && userName.trim()) {
