@@ -22,7 +22,8 @@ const Whiteboard = ({ socketRef, roomId, activeView }) => {
             isDrawingMode: true,
             width: clientWidth,
             height: clientHeight,
-            backgroundColor: 'white'
+            backgroundColor: 'white',
+            allowTouchScrolling: false
         });
         fabricCanvasRef.current = canvas;
 
@@ -99,7 +100,7 @@ const Whiteboard = ({ socketRef, roomId, activeView }) => {
     };
 
     return (
-        <div className="whiteboard-container" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+        <div className="whiteboard-container" style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', touchAction: 'none' }}>
             <div
                 ref={containerRef}
                 style={{

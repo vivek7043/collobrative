@@ -347,6 +347,12 @@ p.tagline {
     height: 100%;
 }
 
+/* Fabric.js Touch Support */
+.upper-canvas,
+.lower-canvas {
+    touch-action: none !important;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .tool-viewport {
