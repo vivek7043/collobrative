@@ -349,7 +349,8 @@ p.tagline {
 
 /* Fabric.js Touch Support */
 .upper-canvas,
-.lower-canvas {
+.lower-canvas,
+.canvas-container {
     touch-action: none !important;
 }
 

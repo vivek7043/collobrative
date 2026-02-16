@@ -234,6 +234,47 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
 
     return (
         <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', padding: '20px' }}>
+            {/* Video Layout */}
+            <div className="video-layout-container">
+                {/* Hero View (Main Screen Share) */}
+                {sharingUserId && (
+                    <div style={{ flex: 1, minHeight: '500px', position: 'relative', borderRadius: '32px', overflow: 'hidden', backgroundColor: '#020617', border: '2px solid var(--primary-color)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+                        {sharingUserId === socket.id ? (
+                            <video muted ref={userVideo} autoPlay playsInline style={{ width: "100%", height: '100%', objectFit: 'contain', transform: isScreenSharing ? 'none' : 'scaleX(-1)' }} />
+                        ) : (
+                            peers.find(p => p.peerID === sharingUserId) && (
+                                <Video peer={peers.find(p => p.peerID === sharingUserId).peer} isShare={true} />
+                            )
+                        )}
+                        <div style={{ position: 'absolute', bottom: '20px', left: '20px', background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(10px)', padding: '8px 16px', borderRadius: '12px', color: 'white', fontWeight: '700', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <i className="fas fa-desktop" style={{ color: 'var(--primary-color)' }}></i>
+                            {sharingUserId === socket.id ? 'You are sharing' : `${participants[sharingUserId] || 'Someone'} is sharing`}
+                        </div>
+                    </div>
+                )}
+
+                {/* Participant Strip/Grid - Hidden during screen share */}
+                {!sharingUserId && (
+                    <div className="video-participant-grid" style={{
+                        gridTemplateColumns: getGridLayout()
+                    }}>
+                        {/* Me */}
+                        <div className="video-tile me-tile">
+                            <video muted ref={userVideo} autoPlay playsInline style={{ width: "100%", height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
+                            <div className="participant-label">{userName} (You)</div>
+                        </div>
+
+                        {/* Peers */}
+                        {peers.map(peer => (
+                            <div key={peer.peerID} className="video-tile">
+                                <Video peer={peer.peer} />
+                                <div className="participant-label">{participants[peer.peerID] || 'Anonymous'}</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {/* Controls Bar */}
             <div className="video-controls-bar">
                 <button
@@ -325,47 +366,6 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                 </button>
             </div>
 
-            {/* Video Layout */}
-            <div className="video-layout-container">
-                {/* Hero View (Main Screen Share) */}
-                {sharingUserId && (
-                    <div style={{ flex: 1, minHeight: '500px', position: 'relative', borderRadius: '32px', overflow: 'hidden', backgroundColor: '#020617', border: '2px solid var(--primary-color)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-                        {sharingUserId === socket.id ? (
-                            <video muted ref={userVideo} autoPlay playsInline style={{ width: "100%", height: '100%', objectFit: 'contain' }} />
-                        ) : (
-                            peers.find(p => p.peerID === sharingUserId) && (
-                                <Video peer={peers.find(p => p.peerID === sharingUserId).peer} isShare={true} />
-                            )
-                        )}
-                        <div style={{ position: 'absolute', bottom: '20px', left: '20px', background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(10px)', padding: '8px 16px', borderRadius: '12px', color: 'white', fontWeight: '700', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <i className="fas fa-desktop" style={{ color: 'var(--primary-color)' }}></i>
-                            {sharingUserId === socket.id ? 'You are sharing' : `${participants[sharingUserId] || 'Someone'} is sharing`}
-                        </div>
-                    </div>
-                )}
-
-                {/* Participant Strip/Grid - Hidden during screen share */}
-                {!sharingUserId && (
-                    <div className="video-participant-grid" style={{
-                        gridTemplateColumns: getGridLayout()
-                    }}>
-                        {/* Me */}
-                        <div className="video-tile me-tile">
-                            <video muted ref={userVideo} autoPlay playsInline style={{ width: "100%", height: '100%', objectFit: 'cover' }} />
-                            <div className="participant-label">{userName} (You)</div>
-                        </div>
-
-                        {/* Peers */}
-                        {peers.map(peer => (
-                            <div key={peer.peerID} className="video-tile">
-                                <Video peer={peer.peer} />
-                                <div className="participant-label">{participants[peer.peerID] || 'Anonymous'}</div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
             <style>{`
                 .video-controls-bar {
                     padding: 15px 25px;
@@ -373,13 +373,14 @@ const VideoCall = ({ socket, roomId, userName, participants, setParticipants }) 
                     justify-content: center;
                     gap: 15px;
                     background: rgba(15, 23, 42, 0.8);
+                    padding: 15px 25px;
                     backdrop-filter: blur(10px);
-                    borderRadius: 24px;
-                    marginBottom: 20px;
+                    border-radius: 24px;
+                    margin-top: 20px;
                     border: 1px solid var(--border-color);
                     width: fit-content;
-                    alignSelf: center;
-                    boxShadow: 0 10px 30px rgba(0,0,0,0.3);
+                    align-self: center;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
                     z-index: 100;
                 }
                 .video-layout-container {

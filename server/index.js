@@ -37,13 +37,15 @@ io.on('connection', (socket) => {
 
     socket.on('join-room', (roomId, userName) => {
         if (!users[roomId]) users[roomId] = [];
+        const isFirst = users[roomId].length === 0;
         const existingUser = users[roomId].find(u => u.id === socket.id);
         if (!existingUser) {
-            users[roomId].push({ id: socket.id, name: userName || 'Anonymous' });
+            users[roomId].push({ id: socket.id, name: userName || 'Anonymous', isAdmin: isFirst });
         }
         socket.join(roomId);
+        socket.emit('admin-status', isFirst);
         socket.to(roomId).emit('user-connected', socket.id, userName);
-        console.log(`[SERVER] User ${userName} (${socket.id}) joined room ${roomId}. Current users:`, users[roomId]);
+        console.log(`[SERVER] User ${userName} (${socket.id}) joined room ${roomId}. Admin: ${isFirst}. Current users:`, users[roomId]);
     });
 
     socket.on('request-all-users', (roomId) => {

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { fabric } from 'fabric';
 
-const Whiteboard = ({ socketRef, roomId, activeView }) => {
+const Whiteboard = ({ socketRef, roomId, activeView, isAdmin }) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const fabricCanvasRef = useRef(null);
@@ -13,26 +13,41 @@ const Whiteboard = ({ socketRef, roomId, activeView }) => {
         const container = containerRef.current;
         let { clientWidth, clientHeight } = container;
 
-        // If hidden initially, use a reasonable default. 
-        // handleResize will correct this as soon as activeView === 'whiteboard'.
         if (clientWidth === 0) clientWidth = window.innerWidth;
         if (clientHeight === 0) clientHeight = 500;
 
         const canvas = new fabric.Canvas(canvasRef.current, {
-            isDrawingMode: true,
+            isDrawingMode: isAdmin,
             width: clientWidth,
             height: clientHeight,
             backgroundColor: 'white',
-            allowTouchScrolling: false
+            allowTouchScrolling: false,
+            enableRetinaScaling: true
         });
         fabricCanvasRef.current = canvas;
+
+        // Force touch action to none on the fabric generated containers
+        const fabricContainer = canvas.getElement().parentNode;
+        if (fabricContainer) {
+            fabricContainer.style.touchAction = 'none';
+        }
 
         canvas.freeDrawingBrush.width = 5;
         canvas.freeDrawingBrush.color = "black";
 
+        // If not admin, disable pointer events on the canvas too
+        if (!isAdmin) {
+            canvas.selection = false;
+            canvas.forEachObject(obj => {
+                obj.selectable = false;
+                obj.evented = false;
+            });
+        }
+
         const handleCanvasData = (data) => {
             canvas.loadFromJSON(data, () => {
                 canvas.renderAll();
+                canvas.calcOffset();
             });
         };
 
@@ -40,6 +55,7 @@ const Whiteboard = ({ socketRef, roomId, activeView }) => {
             canvas.clear();
             canvas.backgroundColor = 'white';
             canvas.renderAll();
+            canvas.calcOffset();
         };
 
         if (socketRef.current) {
@@ -48,10 +64,13 @@ const Whiteboard = ({ socketRef, roomId, activeView }) => {
         }
 
         canvas.on('path:created', () => {
-            if (socketRef.current) {
+            if (isAdmin && socketRef.current) {
                 socketRef.current.emit('canvas-data', { roomId, data: canvas.toJSON() });
             }
         });
+
+        // Ensure canvas is correctly positioned for touch events
+        canvas.calcOffset();
 
         return () => {
             canvas.dispose();
@@ -60,7 +79,7 @@ const Whiteboard = ({ socketRef, roomId, activeView }) => {
                 socketRef.current.off('clear-canvas', handleClearCanvas);
             }
         };
-    }, [roomId, socketRef]);
+    }, [roomId, socketRef, isAdmin]);
 
     // --- Dynamic Resizing ---
     useEffect(() => {
@@ -69,19 +88,17 @@ const Whiteboard = ({ socketRef, roomId, activeView }) => {
                 const { clientWidth, clientHeight } = containerRef.current;
                 if (clientWidth > 0 && clientHeight > 0) {
                     const canvas = fabricCanvasRef.current;
-                    // Update dimensions without clearing content
                     canvas.setWidth(clientWidth);
                     canvas.setHeight(clientHeight);
                     canvas.renderAll();
-                    // Optional: calcOffset to ensure drawing coordinates align
                     canvas.calcOffset();
                 }
             }
         };
 
         if (activeView === 'whiteboard') {
-            // Small delay to ensure the DOM has finished its "display: flex/block" transition
-            setTimeout(handleResize, 100);
+            const timer = setTimeout(handleResize, 100);
+            return () => clearTimeout(timer);
         }
 
         window.addEventListener('resize', handleResize);
@@ -89,10 +106,12 @@ const Whiteboard = ({ socketRef, roomId, activeView }) => {
     }, [activeView]);
 
     const clearBoard = () => {
+        if (!isAdmin) return;
         if (fabricCanvasRef.current) {
             fabricCanvasRef.current.clear();
             fabricCanvasRef.current.backgroundColor = 'white';
             fabricCanvasRef.current.renderAll();
+            fabricCanvasRef.current.calcOffset();
         }
         if (socketRef.current) {
             socketRef.current.emit('clear-canvas', { roomId });
@@ -111,39 +130,67 @@ const Whiteboard = ({ socketRef, roomId, activeView }) => {
                     background: 'white',
                     overflow: 'hidden',
                     width: '100%',
-                    height: '100%'
+                    height: '100%',
+                    touchAction: 'none'
                 }}
             >
                 <canvas ref={canvasRef} />
             </div>
 
-            {/* Compact Floating Clear Button */}
-            <button
-                onClick={clearBoard}
-                style={{
+            {/* Admin Overlay / Notice for non-admins */}
+            {!isAdmin && (
+                <div style={{
                     position: 'absolute',
                     top: '15px',
-                    right: '15px',
-                    padding: '8px 12px',
-                    background: 'rgba(239, 68, 68, 0.1)',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'rgba(15, 23, 42, 0.8)',
                     backdropFilter: 'blur(8px)',
-                    color: '#ef4444',
-                    border: '1px solid rgba(239, 68, 68, 0.2)',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: '600',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
                     fontSize: '0.75rem',
-                    transition: 'all 0.2s',
+                    fontWeight: '600',
+                    border: '1px solid var(--border-color)',
+                    zIndex: 10,
+                    whiteSpace: 'nowrap',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
-                    zIndex: 10
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; e.currentTarget.style.color = '#ef4444'; }}
-            >
-                <span style={{ fontSize: '0.9rem' }}>🗑️</span> Clear
-            </button>
+                    gap: '8px'
+                }}>
+                    <span style={{ color: 'var(--primary-color)' }}>🔒</span> Admin Only: View Mode
+                </div>
+            )}
+
+            {/* Compact Floating Clear Button */}
+            {isAdmin && (
+                <button
+                    onClick={clearBoard}
+                    style={{
+                        position: 'absolute',
+                        top: '15px',
+                        right: '15px',
+                        padding: '8px 12px',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        backdropFilter: 'blur(8px)',
+                        color: '#ef4444',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        fontSize: '0.75rem',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        zIndex: 10
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'; e.currentTarget.style.color = '#ef4444'; }}
+                >
+                    <span style={{ fontSize: '0.9rem' }}>🗑️</span> Clear
+                </button>
+            )}
         </div>
     );
 };

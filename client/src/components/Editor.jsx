@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-const Editor = ({ socketRef, roomId, participants }) => {
+const Editor = ({ socketRef, roomId, participants, isAdmin }) => {
     const [content, setContent] = useState('');
     const [cursors, setCursors] = useState({});
     const textareaRef = useRef(null);
@@ -23,6 +23,7 @@ const Editor = ({ socketRef, roomId, participants }) => {
     }, [socketRef.current]);
 
     const handleChange = (e) => {
+        if (!isAdmin) return;
         const newContent = e.target.value;
         setContent(newContent);
         if (socketRef.current) {
@@ -31,6 +32,7 @@ const Editor = ({ socketRef, roomId, participants }) => {
     };
 
     const handleSelect = (e) => {
+        if (!isAdmin) return;
         const cursor = {
             index: e.target.selectionStart,
         };
@@ -64,9 +66,44 @@ const Editor = ({ socketRef, roomId, participants }) => {
                 value={content}
                 onChange={handleChange}
                 onSelect={handleSelect}
-                style={{ width: '100%', height: '100%', padding: '20px', fontFamily: 'monospace', fontSize: '16px', background: '#1e1e1e', color: '#fff', border: 'none', resize: 'none' }}
-                placeholder="Start collaborating..."
+                readOnly={!isAdmin}
+                style={{
+                    width: '100%',
+                    height: '100%',
+                    padding: '20px',
+                    fontFamily: 'monospace',
+                    fontSize: '16px',
+                    background: '#1e1e1e',
+                    color: '#fff',
+                    border: 'none',
+                    resize: 'none',
+                    outline: 'none'
+                }}
+                placeholder={isAdmin ? "Start typing..." : "Waiting for admin to share content..."}
             />
+
+            {/* Admin Notice for non-admins */}
+            {!isAdmin && (
+                <div style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    background: 'rgba(2, 6, 23, 0.6)',
+                    backdropFilter: 'blur(8px)',
+                    color: '#94a3b8',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.7rem',
+                    fontWeight: '600',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                }}>
+                    <span style={{ color: 'var(--primary-color)' }}>🔒</span> View Only
+                </div>
+            )}
+
             {renderCursors()}
         </div>
     );
